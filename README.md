@@ -1,4 +1,4 @@
-# perlbvc
+# perlbsc
 Perl module to program your network via the Brocade SDN Controller
 
 ## Other Brocade SDN Controller libraries 
@@ -61,14 +61,14 @@ sudo cpanm Brocade::BSC
 
 
 ## Documentation:
-   - [Programmer's Reference](http://brcdcomm.github.io/perlbvc/)
+   - [Programmer's Reference](http://brcdcomm.github.io/perlbsc/)
 
 ## Sample Applications:
-   - [perlbvcsamples](https://github.com/brcdcomm/perlbvcsamples)
+   - [perlbscsamples](https://github.com/brcdcomm/perlbscsamples)
    - To install samples:
 
      ```bash
-     git clone https://github.com/brcdcomm/perlbvcsamples.git
+     git clone https://github.com/brcdcomm/perlbscsamples.git
      ```
 
 ## Example 1:  Add and remove firewall on SDN vrouter5600 via BVC:
