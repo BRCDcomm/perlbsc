@@ -31,16 +31,19 @@ Perl module to program your network via the Brocade SDN Controller
           ```
           - If it is not installed, then download and install: https://www.perl-lang.org/en/documentation/installation/ 
    - cpanm:
-        - Test inf your system already has it
+        - Test if your system already has it
+
           ```bash         
           cpanm --version
           ```
           - If it is installed you should see a response similar to this (version and OS may change it a bit):
+
           ```
           cpanm (App::cpanminus) version 1.7039 (/usr/local/bin/cpanm)
           perl version 5.016002 (/usr/bin/perl)
           ```
           - If it is not installed, then:
+
           ```bash
           cpan App::cpanminus
           ```
