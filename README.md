@@ -3,9 +3,10 @@ Perl module to program your network via the Brocade SDN Controller
 
 ## Other Brocade SDN Controller libraries 
 * pybvc - Python library for programming Brocade SDN Controller:  https://github.com/BRCDcomm/pybvc 
+* rubybvc - Ruby gem for programming Brocade SDN Controller:  https://github.com/BRCDcomm/rubybvc 
 
 ## Current Version:
-1.0.0
+1.0.2
 
 ## Prerequisites
    - Perl 5: 
