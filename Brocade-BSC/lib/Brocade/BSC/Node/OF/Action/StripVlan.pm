@@ -1,53 +1,6 @@
-Brocade::BSC Version 1.0.2
+=head1 Brocade::BSC::Node::OF::Action::StripVlan
 
-Brocade::BSC provides a perl API for interacting with the Brocade
-Communications Systems port of the OpenDaylight Software-defined
-networking controller ('Brocade SDN Controller').
-
-Brocade::BSC is a port of the python library pybvc.  Version 1.0.2 is
-pre-alpha software and provides functionality equivalent to version 1.0.2
-of pybvc.
-
-Brocade::BSC requires XML::Parser, and therefore depends indirectly on
-James Clark's XML parser, expat, version 1.95.0 or greater.  The expat
-development package may be downloaded from http://expat.sourceforge.net/
-or installed using your OS package manager, for example
-
-ubuntu$ sudo apt-get install libexpat1-dev
-fedora$ sudo yum install expat-devel
-
-INSTALLATION
-
-To install this module, run the following commands:
-
-	perl Makefile.PL
-	make
-	make test
-	make install
-
-SUPPORT AND DOCUMENTATION
-
-After installing, you can find documentation for this module with the
-perldoc command.
-
-    perldoc Brocade::BSC
-
-You can also look for information at:
-
-    RT, CPAN's request tracker (report bugs here)
-        http://rt.cpan.org/NoAuth/Bugs.html?Dist=Brocade-BSC
-
-    AnnoCPAN, Annotated CPAN documentation
-        http://annocpan.org/dist/Brocade-BSC
-
-    CPAN Ratings
-        http://cpanratings.perl.org/d/Brocade-BSC
-
-    Search CPAN
-        http://search.cpan.org/dist/Brocade-BSC/
-
-
-LICENSE AND COPYRIGHT
+=head1 LICENCE AND COPYRIGHT
 
 Copyright (c) 2015,  BROCADE COMMUNICATIONS SYSTEMS, INC
 
@@ -79,4 +32,28 @@ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 THE POSSIBILITY OF SUCH DAMAGE.
 
+=cut
 
+package Brocade::BSC::Node::OF::Action::StripVlan;
+use parent qw(Brocade::BSC::Node::OF::Action);
+
+use strict;
+use warnings;
+
+
+# Constructor ==========================================================
+# Parameters: none
+# Returns   : Brocade::BSC::Node::OF::Action::StripVlan object
+# 
+sub new {
+    my $class = shift;
+    my %params = @_;
+
+    my $self = $class->SUPER::new(%params);
+    $self->{strip_vlan_action} = {};
+    bless ($self, $class);
+}
+
+
+# Module ===============================================================
+1;
