@@ -65,7 +65,7 @@ sudo cpanm Brocade::BSC
 
 
 ## Documentation:
-   - [Programmer's Reference](https://metacpan.org/pod/Brocade::BSC#METHODS)
+   - [Programmer's Reference](https://metacpan.org/release/Brocade-BSC)
 
 ## Sample Applications:
    - [perlbscsamples](https://github.com/brcdcomm/perlbscsamples)
