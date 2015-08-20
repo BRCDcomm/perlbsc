@@ -65,6 +65,7 @@ sudo cpanm Brocade::BSC
 
 
 ## Documentation:
+   - [Intro Video](http://brcdcomm.github.io/BVC/jekyll/update/devops/netdev/appdev/2015/08/20/PerlBsc-Intro.html)
    - [Programmer's Reference](https://metacpan.org/release/Brocade-BSC)
 
 ## Sample Applications:
