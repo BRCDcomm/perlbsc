@@ -1,3 +1,33 @@
+# Copyright (c) 2015,  BROCADE COMMUNICATIONS SYSTEMS, INC
+#
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice,
+# this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its
+# contributors may be used to endorse or promote products derived from this
+# software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+# THE POSSIBILITY OF SUCH DAMAGE.
+
 =head1 NAME
 
 Brocade::BSC::Node::NC::Vrouter::VR5600
@@ -102,6 +132,7 @@ package Brocade::BSC::Node::NC::Vrouter::VR5600;
 
 use base qw(Brocade::BSC::Node::NC);
 use HTTP::Status qw(:constants :is status_message);
+use URI::Escape qw(uri_escape);
 use JSON -convert_blessed_universally;
 use Brocade::BSC;
 use Brocade::BSC::Status qw(:constants);
@@ -632,39 +663,246 @@ sub delete_vpn_cfg {
 }
 
 
+# Method ===============================================================
+#
+=item B<set_openvpn_interface_cfg>
+
+  # Parameters:
+  # Returns   :
+
+=cut ===================================================================
+sub set_openvpn_interface_cfg {
+    my ($self, $ovpn_ifcfg) = @_;
+    my $status = new Brocade::BSC::Status($BSC_OK);
+    my %headers = ('content-type' => 'application/yang.data+json');
+    my $urlpath = $self->{ctrl}->get_ext_mount_config_urlpath($self->{name});
+
+    my $resp = $self->ctrl_req('POST', $urlpath,
+                               $ovpn_ifcfg->get_payload, \%headers);
+    $resp->is_success or $status->http_err($resp);
+    return $status;
+}
+
+
+# Method ===============================================================
+#
+=item B<get_openvpn_interface_cfg>
+
+  # Parameters:
+  # Returns   :
+
+=cut ===================================================================
+sub get_openvpn_interface_cfg {
+    my ($self, $ovpn_ifname) = @_;
+    my $status = new Brocade::BSC::Status;
+    my $config = undef;
+    my $urlpath = $self->{ctrl}->get_ext_mount_config_urlpath($self->{name})
+        . "vyatta-interfaces:interfaces/"
+        . "vyatta-interfaces-openvpn:openvpn/$ovpn_ifname";
+
+    my $resp = $self->ctrl_req('GET', $urlpath);
+    if ($resp->code == HTTP_OK) {
+	$config = $resp->content;
+	$status->code($BSC_OK);
+    }
+    elsif ($resp->code == HTTP_NOT_FOUND) {
+	$status->code($BSC_DATA_NOT_FOUND);
+    }
+    else {
+	$status->http_err($resp);
+    }
+    return ($status, $config);
+}
+
+
+# Method ===============================================================
+#
+=item B<get_openvpn_interfaces_cfg>
+
+  # Parameters:
+  # Returns   : BSC::Status
+  #           : array ref - configuration of openvpn interface(s)
+
+=cut ===================================================================
+sub get_openvpn_interfaces_cfg {
+    my $self = shift;
+    my $ovpn_ifcfg = undef;
+    my $ovpn_tag = 'vyatta-interfaces-openvpn:openvpn';
+
+    my ($status, $config) = $self->get_interfaces_cfg();
+    if ($status->ok) {
+        ($config =~ /$ovpn_tag/) and
+            $ovpn_ifcfg = decode_json($config)->{'interfaces'}->{$ovpn_tag} or
+            $status->code($BSC_DATA_NOT_FOUND);
+    }
+    return ($status, $ovpn_ifcfg);
+}
+
+
+# Method ===============================================================
+#
+=item B<delete_openvpn_interface_cfg>
+
+  # Parameters: interface name for openvpn if; e.g. vtun0
+  # Returns   : BSC::Status
+
+=cut ===================================================================
+sub delete_openvpn_interface_cfg {
+    my ($self, $ovpn_ifname) = @_;
+    my $status = new Brocade::BSC::Status($BSC_OK);
+    my $urlpath = $self->{ctrl}->get_ext_mount_config_urlpath($self->{name})
+        . "vyatta-interfaces:interfaces/"
+        . "vyatta-interfaces-openvpn:openvpn/$ovpn_ifname";
+
+    my $resp = $self->ctrl_req('DELETE', $urlpath);
+    $resp->is_success() or $status->http_err($resp);
+    return $status;
+}
+
+
+# Method ===============================================================
+#
+=item B<set_protocols_static_route_cfg>
+
+  # Parameters: BSC::Node::NC::Vrouter::StaticRoute to set
+  # Returns   : BSC::Status
+
+Configure static route on vRouter
+
+=cut ===================================================================
+sub set_protocols_static_route_cfg {
+    my ($self, $route) = @_;
+    my $status = new Brocade::BSC::Status($BSC_OK);
+    my %headers = ('content-type' => 'application/yang.data+json');
+    my $urlpath = $self->{ctrl}->get_ext_mount_config_urlpath($self->{name});
+
+    my $resp = $self->ctrl_req('POST', $urlpath,
+                               $route->get_payload, \%headers);
+    $resp->is_success() or $status->http_err($resp);
+    return $status;
+}
+
+
+# Method ===============================================================
+#
+=item B<get_protocols_cfg>
+
+  # Parameters: model, opt, on which to filter
+  # Returns   : BSC::Status
+  #           : routing protocol configuation as JSON
+
+=cut ===================================================================
+sub get_protocols_cfg {
+    my ($self, $model) = @_;
+    my $status = new Brocade::BSC::Status;
+    my $config = undef;
+    my $urlpath = $self->{ctrl}->get_ext_mount_config_urlpath($self->{name})
+        . "vyatta-protocols:protocols";
+    defined $model and $urlpath .= "/$model";
+
+    my $resp = $self->ctrl_req('GET', $urlpath);
+    if ($resp->code == HTTP_OK) {
+	$config = $resp->content;
+	$status->code($BSC_OK);
+    }
+    elsif ($resp->code == HTTP_NOT_FOUND) {
+	$status->code($BSC_DATA_NOT_FOUND);
+    }
+    else {
+	$status->http_err($resp);
+    }
+    return ($status, $config);
+}
+
+
+# Method ===============================================================
+#
+=item B<delete_protocols_cfg>
+
+  # Parameters: model, opt, on which to filter for deletion
+  # Returns   : BSC::Status
+
+=cut ===================================================================
+sub delete_protocols_cfg {
+    my ($self, $model) = @_;
+    my $status = new Brocade::BSC::Status($BSC_OK);
+    my $urlpath = $self->{ctrl}->get_ext_mount_config_urlpath($self->{name})
+        . "vyatta-protocols:protocols";
+    defined $model and $urlpath .= "/$model";
+
+    my $resp = $self->ctrl_req('DELETE', $urlpath);
+    $resp->is_success() or $status->http_err($resp);
+    return $status;
+}
+
+
+# Method ===============================================================
+#
+=item B<get_protocols_static_cfg>
+
+  # Returns   : BSC::Status
+  #           : static route configuration as JSON
+
+=cut ===================================================================
+sub get_protocols_static_cfg {
+    my $self = shift;
+    return $self->get_protocols_cfg('vyatta-protocols-static:static');
+}
+
+
+# Method ===============================================================
+#
+=item B<delete_protocols_static_cfg>
+
+  # Returns   : BSC::Status
+
+=cut ===================================================================
+sub delete_protocols_static_cfg {
+    my $self = shift;
+    return $self->delete_protocols_cfg('vyatta-protocols-static:static');
+}
+
+
+# Method ===============================================================
+#
+=item B<get_protocols_static_interface_route_cfg>
+
+  # Parameters: subnet for which to get route
+  # Returns   : BSC::Status
+  #           : requested route as JSON
+
+=cut ===================================================================
+sub get_protocols_static_interface_route_cfg {
+    my ($self, $subnet) = @_;
+    return $self->get_protocols_cfg("vyatta-protocols-static:static"
+                                    . "/interface-route/"
+                                    . uri_escape($subnet));
+}
+
+
+# Method ===============================================================
+#
+=item B<delete_protocols_static_interface_route_cfg>
+
+  # Parameters: subnet for route to delete
+  # Returns   : BSC::Status
+
+=cut ===================================================================
+sub delete_protocols_static_interface_route_cfg {
+    my ($self, $subnet) = @_;
+    return $self->delete_protocols_cfg("vyatta-protocols-static:static"
+                                       . "/interface-route/"
+                                       . uri_escape($subnet));
+}
+
+
 # Module ===============================================================
 1;
 
 =back
 
-=head1 LICENCE AND COPYRIGHT
+=head1 COPYRIGHT
 
 Copyright (c) 2015,  BROCADE COMMUNICATIONS SYSTEMS, INC
 
 All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice,
-this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation
-and/or other materials provided with the distribution.
-
-3. Neither the name of the copyright holder nor the names of its
-contributors may be used to endorse or promote products derived from this
-software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-THE POSSIBILITY OF SUCH DAMAGE.

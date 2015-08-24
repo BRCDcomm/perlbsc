@@ -6,7 +6,7 @@ Perl module to program your network via the Brocade SDN Controller
 * rubybvc - Ruby gem for programming Brocade SDN Controller:  https://github.com/BRCDcomm/rubybvc 
 
 ## Current Version:
-1.0.3
+1.0.4
 
 ## Prerequisites
    - Perl 5: 
